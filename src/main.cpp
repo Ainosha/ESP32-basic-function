@@ -1,8 +1,8 @@
 #include <Arduino.h>
 
-#define uptime      1000
-#define downtime    1000
-#define interval    2000  // Interval of 1 second
+#define dottime      1000
+#define interval    2000
+
 int sensorMax=1023;  // minimum sensor value
 int sensorMin=50;  // maximum sensor value
 
@@ -62,11 +62,11 @@ void morse_s(int letPin){
   for(int i=0; i<3;i++){
     // Turn the LED on
     digitalWrite(ledPin, HIGH);
-    delay(uptime);  // Wait for 1 second
+    delay(dottime);  // Wait for 1 second
     
     // Turn the LED off
     digitalWrite(ledPin, LOW);
-    delay(downtime);  // Wait for 1 second
+    delay(dottime);  // Wait for 1 second
     Serial.print(".");
   }
   unsigned long dif = millis() - currentMillis;
@@ -78,11 +78,11 @@ void morse_o(int letPin){
   for(int i=0; i<3;i++){
     // Turn the LED on
     digitalWrite(ledPin, HIGH);
-    delay(3*uptime);  // Wait for 1 second
+    delay(3*dottime);  // Wait for 1 second
     
     // Turn the LED off
     digitalWrite(ledPin, LOW);
-    delay(downtime);  // Wait for 1 second
+    delay(dottime);  // Wait for 1 second
     Serial.print("-");
   }
   unsigned long dif = millis() - currentMillis;
@@ -92,13 +92,9 @@ void morse_o(int letPin){
 void morse_espace_lettre(int letPin){
   unsigned long currentMillis = millis();
   for(int i=0; i<3;i++){
-    // Turn the LED on
-    digitalWrite(ledPin, HIGH);
-    delay(uptime);  // Wait for 1 second
-    
     // Turn the LED off
     digitalWrite(ledPin, LOW);
-    delay(downtime);  // Wait for 1 second
+    delay(dottime);  // Wait for 1 second
     Serial.print(".");
   }
   unsigned long dif = millis() - currentMillis;
@@ -107,14 +103,10 @@ void morse_espace_lettre(int letPin){
 
 void morse_espace_mots(int letPin){
   unsigned long currentMillis = millis();
-  for(int i=0; i<7;i++){
-    // Turn the LED on
-    digitalWrite(ledPin, HIGH);
-    delay(uptime);  // Wait for 1 second
-    
+  for(int i=0; i<7;i++){    
     // Turn the LED off
     digitalWrite(ledPin, LOW);
-    delay(downtime);  // Wait for 1 second
+    delay(dottime);  // Wait for 1 second
     Serial.print(".");
   }
   unsigned long dif = millis() - currentMillis;
@@ -129,6 +121,7 @@ void MessageSOS(int ledPin){
   morse_s(ledPin);
   morse_espace_mots(ledPin);
 }
+
 void Calibrationsensor(int sensorPin){
   while (millis() < 5000) {
     sensorValue = analogRead(sensorPin);
