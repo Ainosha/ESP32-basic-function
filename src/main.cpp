@@ -9,12 +9,16 @@ int sensorMin=50;  // maximum sensor value
 const int ledPin = 2;  // Use GPIO 2 for built-in LED (on many ESP32 boards)
 const int sensorPin = 36;  // GPIO36 is the VP pin
 const int sensorPinVN = 39;  // GPIO39 is the VN pin
+const int button = 32;
 
 unsigned long previousMillis = 0;
 unsigned long  sensorValue;
+int count=0;
+int lastButtonState =LOW;
 
 // Define function
 void sendhello();
+void readbutton(int pin);
 
 void morse_s(int ledPin);
 void morse_o(int ledPin);
@@ -24,6 +28,7 @@ void MessageSOS(int ledPin);
 
 void Calibrationsensor(int sensorPin);
 void readsensor(int sensorPin);
+void LM53(int sensorPin);
 
 
 void setup() {
@@ -42,8 +47,6 @@ void loop() {
   //MessageSOS(ledPin);
   readsensor(sensorPin);
   readsensor(sensorPinVN);
-
-
 }
 
 void sendhello(){
@@ -54,6 +57,19 @@ void sendhello(){
     Serial.printf("Time %d ",time);
     previousMillis = currentMillis;
     Serial.println("Hello World");
+  }
+}
+void readbutton(int pin){
+  int buttonState = digitalRead(pin);  // Read the current state of the button
+
+  // Check if the button state has changed from the last loop
+  if (buttonState != lastButtonState) {
+    // If the button is released, increment the counter
+    if (buttonState == HIGH) {
+      count++;
+      Serial.println(count);  // Print the count only when it changes
+      delay(10); //for polling
+    }
   }
 }
 
@@ -147,4 +163,15 @@ void readsensor(int sensorPin){
   sensorValue = map(sensorValue, sensorMin, sensorMax, 0, 255);
   Serial.printf("Analog Value from (GPIO%d): %d\n", sensorPin,sensorValue);
   delay(1000);
+}
+
+void LM53(int sensorPin){
+  //quantum NodeMCU ESP32 adc   :   q = 3.3V/4095 = 0.8 /mV
+  //équation LM32               :   Vout = 10mV/°C * T
+  //1°C =>                          output = q*Vout = (10 mV/°C) *(0.8 /mV)*T = (8 /°C)* T
+  int sensorValue = analogRead(sensorPin);
+  
+  int Temp = (sensorValue / 8) + calibrationOffset;
+  Serial.printf("Température LM35 : %d °C", Temp);
+
 }
