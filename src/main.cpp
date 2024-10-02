@@ -1,7 +1,8 @@
 #include <Arduino.h>
 
-#define dottime      1000
-#define interval    2000
+#define dottime             1000
+#define interval            2000
+#define calibrationOffset   10
 
 int sensorMax=1023;  // minimum sensor value
 int sensorMin=50;  // maximum sensor value
@@ -9,16 +10,19 @@ int sensorMin=50;  // maximum sensor value
 const int ledPin = 2;  // Use GPIO 2 for built-in LED (on many ESP32 boards)
 const int sensorPin = 36;  // GPIO36 is the VP pin
 const int sensorPinVN = 39;  // GPIO39 is the VN pin
-const int button = 32;
+const int buttonPin = 32;
+
 
 unsigned long previousMillis = 0;
 unsigned long  sensorValue;
-int count=0;
+volatile int buttonCounter = 0;
 int lastButtonState =LOW;
 
 // Define function
 void sendhello();
 void readbutton(int pin);
+void handleButtonPress();
+void interruptshow();
 
 void morse_s(int ledPin);
 void morse_o(int ledPin);
@@ -36,17 +40,21 @@ void setup() {
   Serial.begin(115200);
   pinMode(ledPin, OUTPUT);
   pinMode(sensorPin, INPUT);  // Set the VP pin as an input
+  //pinMode(buttonPin, INPUT_PULLUP); // Set the button pin as input with pull-up resistor
   Serial.println("ESP32 with millis() for non-blocking delay");
-  Calibrationsensor(sensorPin);
-  Calibrationsensor(sensorPinVN);
+  //attachInterrupt(digitalPinToInterrupt(buttonPin), handleButtonPress, FALLING);
+  //Calibrationsensor(sensorPin);
+  //Calibrationsensor(sensorPinVN);
 
 }
 
 void loop() {
   //sendhello();
   //MessageSOS(ledPin);
-  readsensor(sensorPin);
-  readsensor(sensorPinVN);
+  //readsensor(sensorPin);
+  //readsensor(sensorPinVN);
+  //readbutton(buttonPin);
+  //interruptshow();
 }
 
 void sendhello(){
@@ -59,29 +67,40 @@ void sendhello(){
     Serial.println("Hello World");
   }
 }
-void readbutton(int pin){
-  int buttonState = digitalRead(pin);  // Read the current state of the button
 
-  // Check if the button state has changed from the last loop
-  if (buttonState != lastButtonState) {
-    // If the button is released, increment the counter
-    if (buttonState == HIGH) {
-      count++;
-      Serial.println(count);  // Print the count only when it changes
-      delay(10); //for polling
-    }
+//Setup in pullup schematics
+void handleButtonPress(){
+    buttonCounter++; // Increment the counter when the button is pressed
+}
+void interruptshow(){
+  Serial.print("Button Press Count: ");
+  Serial.println(buttonCounter); // Display the count on the serial monitor
+  delay(1000);
+}
+void readbutton(int pin){ 
+int currentButtonState = digitalRead(pin); // Read the current state of the button
+
+  // Check for a button press (transition from HIGH to LOW)
+  if (lastButtonState == HIGH && currentButtonState == LOW) {
+    buttonCounter++; // Increment the counter
+    Serial.print("Button Press Count: ");
+    Serial.println(buttonCounter); // Display the count on the serial monitor
+    delay(50); // Simple debounce delay
   }
+  // Update lastButtonState
+  lastButtonState = currentButtonState;
+      
 }
 
-void morse_s(int letPin){
+void morse_s(int Pin){
   unsigned long currentMillis = millis();
   for(int i=0; i<3;i++){
     // Turn the LED on
-    digitalWrite(ledPin, HIGH);
+    digitalWrite(Pin, HIGH);
     delay(dottime);  // Wait for 1 second
     
     // Turn the LED off
-    digitalWrite(ledPin, LOW);
+    digitalWrite(Pin, LOW);
     delay(dottime);  // Wait for 1 second
     Serial.print(".");
   }
@@ -89,15 +108,15 @@ void morse_s(int letPin){
   Serial.printf("\nTime send S : %d ms \n",dif);
 }
 
-void morse_o(int letPin){
+void morse_o(int Pin){
   unsigned long currentMillis = millis();
   for(int i=0; i<3;i++){
     // Turn the LED on
-    digitalWrite(ledPin, HIGH);
+    digitalWrite(Pin, HIGH);
     delay(3*dottime);  // Wait for 1 second
     
     // Turn the LED off
-    digitalWrite(ledPin, LOW);
+    digitalWrite(Pin, LOW);
     delay(dottime);  // Wait for 1 second
     Serial.print("-");
   }
@@ -105,7 +124,7 @@ void morse_o(int letPin){
   Serial.printf("\nTime send O : %d ms \n",dif);
 }
 
-void morse_espace_lettre(int letPin){
+void morse_espace_lettre(int ledPin){
   unsigned long currentMillis = millis();
   for(int i=0; i<3;i++){
     // Turn the LED off
@@ -117,7 +136,7 @@ void morse_espace_lettre(int letPin){
   Serial.printf("\nTime send espace lettre : %d ms \n",dif);
 }
 
-void morse_espace_mots(int letPin){
+void morse_espace_mots(int ledPin){
   unsigned long currentMillis = millis();
   for(int i=0; i<7;i++){    
     // Turn the LED off
