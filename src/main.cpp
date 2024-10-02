@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <driver/adc.h>
 
 #define dottime             1000
 #define interval            2000
@@ -32,7 +33,7 @@ void MessageSOS(int ledPin);
 
 void Calibrationsensor(int sensorPin);
 void readsensor(int sensorPin);
-void LM53(int sensorPin);
+void LM35(int sensorPin);
 
 
 void setup() {
@@ -40,6 +41,8 @@ void setup() {
   Serial.begin(115200);
   pinMode(ledPin, OUTPUT);
   pinMode(sensorPin, INPUT);  // Set the VP pin as an input
+  pinMode(sensorPinVN, INPUT);  // Set the VN pin as an input
+
   //pinMode(buttonPin, INPUT_PULLUP); // Set the button pin as input with pull-up resistor
   Serial.println("ESP32 with millis() for non-blocking delay");
   //attachInterrupt(digitalPinToInterrupt(buttonPin), handleButtonPress, FALLING);
@@ -55,6 +58,7 @@ void loop() {
   //readsensor(sensorPinVN);
   //readbutton(buttonPin);
   //interruptshow();
+  LM35(sensorPinVN);
 }
 
 void sendhello(){
@@ -184,13 +188,16 @@ void readsensor(int sensorPin){
   delay(1000);
 }
 
-void LM53(int sensorPin){
-  //quantum NodeMCU ESP32 adc   :   q = 3.3V/4095 = 0.8 /mV
+void LM35(int sensorPin){
+  //quantum NodeMCU ESP32 adc   :   q = 1.1V/4095 = 0.27 mV/bit
   //équation LM32               :   Vout = 10mV/°C * T
-  //1°C =>                          output = q*Vout = (10 mV/°C) *(0.8 /mV)*T = (8 /°C)* T
-  int sensorValue = analogRead(sensorPin);
+  //1°C =>                          output = Vout/q = (10 mV/°C)/[(0.27 mV/bit)] * T = (2.7 bit/°C)* T
   
-  int Temp = (sensorValue / 8) + calibrationOffset;
-  Serial.printf("Température LM35 : %d °C", Temp);
+  adc1_config_width(ADC_WIDTH_BIT_12);
+  adc1_config_channel_atten(ADC1_CHANNEL_5,ADC_ATTEN_DB_0);
+  int value = adc1_get_raw(ADC1_CHANNEL_5);
+  float Temp = (value * 0.027) + calibrationOffset;
+  Serial.printf("Température LM35 : %f °C\n", Temp);
+  delay(1000);
 
 }
