@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <driver/adc.h>
 
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
@@ -20,6 +21,12 @@ Adafruit_BME680 bme;
 
 #define dottime      1000
 #define interval    2000
+#define calibrationOffset   10
+
+//LDR config constante
+#define constant            464.16
+#define droite_directeur    -1.333
+#define Resistance          10000//ohm
 
 int sensorMax=1023;  // minimum sensor value
 int sensorMin=50;  // maximum sensor value
@@ -27,11 +34,12 @@ int sensorMin=50;  // maximum sensor value
 const int ledPin = 2;  // Use GPIO 2 for built-in LED (on many ESP32 boards)
 const int sensorPin = 36;  // GPIO36 is the VP pin
 const int sensorPinVN = 39;  // GPIO39 is the VN pin
-const int button = 32;
+const int buttonPin = 32;
+
 
 unsigned long previousMillis = 0;
 unsigned long  sensorValue;
-int count=0;
+volatile int buttonCounter = 0;
 int lastButtonState =LOW;
 
 int lcd_count=0;
@@ -39,6 +47,8 @@ int lcd_count=0;
 // Define function
 void sendhello();
 void readbutton(int pin);
+void handleButtonPress();
+void interruptshow();
 
 void morse_s(int ledPin);
 void morse_o(int ledPin);
@@ -48,7 +58,8 @@ void MessageSOS(int ledPin);
 
 void Calibrationsensor(int sensorPin);
 void readsensor(int sensorPin);
-void LM53(int sensorPin);
+void LM35(int sensorPin);
+void LDR();
 
 void init_BME();
 void read_BME();
@@ -66,9 +77,13 @@ void setup() {
   Serial.begin(115200);
   pinMode(ledPin, OUTPUT);
   pinMode(sensorPin, INPUT);  // Set the VP pin as an input
+  pinMode(sensorPinVN, INPUT);  // Set the VN pin as an input
+
+  //pinMode(buttonPin, INPUT_PULLUP); // Set the button pin as input with pull-up resistor
   Serial.println("ESP32 with millis() for non-blocking delay");
-  Calibrationsensor(sensorPin);
-  Calibrationsensor(sensorPinVN);
+  //attachInterrupt(digitalPinToInterrupt(buttonPin), handleButtonPress, FALLING);
+  //Calibrationsensor(sensorPin);
+  //Calibrationsensor(sensorPinVN);
 
   //init_BME();
   //init_LCD();
@@ -84,7 +99,12 @@ void loop() {
 
   //read_BME();
   //LCD_display_counter_s();
-  weatherstack_API();
+  //weatherstack_API();
+  //readbutton(buttonPin);
+  //interruptshow();
+  //LM35();
+  LDR();
+
 }
 
 void sendhello(){
@@ -97,29 +117,40 @@ void sendhello(){
     Serial.println("Hello World");
   }
 }
-void readbutton(int pin){
-  int buttonState = digitalRead(pin);  // Read the current state of the button
 
-  // Check if the button state has changed from the last loop
-  if (buttonState != lastButtonState) {
-    // If the button is released, increment the counter
-    if (buttonState == HIGH) {
-      count++;
-      Serial.println(count);  // Print the count only when it changes
-      delay(10); //for polling
-    }
+//Setup in pullup schematics
+void handleButtonPress(){
+    buttonCounter++; // Increment the counter when the button is pressed
+}
+void interruptshow(){
+  Serial.print("Button Press Count: ");
+  Serial.println(buttonCounter); // Display the count on the serial monitor
+  delay(1000);
+}
+void readbutton(int pin){ 
+int currentButtonState = digitalRead(pin); // Read the current state of the button
+
+  // Check for a button press (transition from HIGH to LOW)
+  if (lastButtonState == HIGH && currentButtonState == LOW) {
+    buttonCounter++; // Increment the counter
+    Serial.print("Button Press Count: ");
+    Serial.println(buttonCounter); // Display the count on the serial monitor
+    delay(50); // Simple debounce delay
   }
+  // Update lastButtonState
+  lastButtonState = currentButtonState;
+      
 }
 
-void morse_s(int letPin){
+void morse_s(int Pin){
   unsigned long currentMillis = millis();
   for(int i=0; i<3;i++){
     // Turn the LED on
-    digitalWrite(ledPin, HIGH);
+    digitalWrite(Pin, HIGH);
     delay(dottime);  // Wait for 1 second
     
     // Turn the LED off
-    digitalWrite(ledPin, LOW);
+    digitalWrite(Pin, LOW);
     delay(dottime);  // Wait for 1 second
     Serial.print(".");
   }
@@ -127,15 +158,15 @@ void morse_s(int letPin){
   Serial.printf("\nTime send S : %d ms \n",dif);
 }
 
-void morse_o(int letPin){
+void morse_o(int Pin){
   unsigned long currentMillis = millis();
   for(int i=0; i<3;i++){
     // Turn the LED on
-    digitalWrite(ledPin, HIGH);
+    digitalWrite(Pin, HIGH);
     delay(3*dottime);  // Wait for 1 second
     
     // Turn the LED off
-    digitalWrite(ledPin, LOW);
+    digitalWrite(Pin, LOW);
     delay(dottime);  // Wait for 1 second
     Serial.print("-");
   }
@@ -143,7 +174,7 @@ void morse_o(int letPin){
   Serial.printf("\nTime send O : %d ms \n",dif);
 }
 
-void morse_espace_lettre(int letPin){
+void morse_espace_lettre(int ledPin){
   unsigned long currentMillis = millis();
   for(int i=0; i<3;i++){
     // Turn the LED off
@@ -155,7 +186,7 @@ void morse_espace_lettre(int letPin){
   Serial.printf("\nTime send espace lettre : %d ms \n",dif);
 }
 
-void morse_espace_mots(int letPin){
+void morse_espace_mots(int ledPin){
   unsigned long currentMillis = millis();
   for(int i=0; i<7;i++){    
     // Turn the LED off
@@ -203,14 +234,36 @@ void readsensor(int sensorPin){
   delay(1000);
 }
 
-void LM53(int sensorPin){
-  //quantum NodeMCU ESP32 adc   :   q = 3.3V/4095 = 0.8 /mV
+void LM35(){
+  //quantum NodeMCU ESP32 adc   :   q = 1.1V/4095 = 0.27 mV/bit
   //équation LM32               :   Vout = 10mV/°C * T
-  //1°C =>                          output = q*Vout = (10 mV/°C) *(0.8 /mV)*T = (8 /°C)* T
-  int sensorValue = analogRead(sensorPin);
-  
-  //int Temp = (sensorValue / 8) + calibrationOffset;
-  //Serial.printf("Température LM35 : %d °C", Temp);
+  //1°C =>                          output = Vout/q = (10 mV/°C)/[(0.27 mV/bit)] * T = (2.7 bit/°C)* T
+
+  adc1_config_width(ADC_WIDTH_BIT_12);
+  adc1_config_channel_atten(ADC1_CHANNEL_5,ADC_ATTEN_DB_0);
+  int value = adc1_get_raw(ADC1_CHANNEL_5);
+  float Temp = (value * 0.027) + calibrationOffset;
+  Serial.printf("Température LM35 : %f °C\n", Temp);
+  delay(1000);
+
+}
+
+void LDR(){
+  adc1_config_width(ADC_WIDTH_BIT_12);
+  adc1_config_channel_atten(ADC1_CHANNEL_0,ADC_ATTEN_DB_12);
+  int value = adc1_get_raw(ADC1_CHANNEL_0);
+    // Print the ADC raw value
+  Serial.printf("Raw ADC Value: %d\n", value);
+
+  float voltage = (float)value * (3.9 / 4095);
+  float resistor_ldr = (float)Resistance * ((3.3 - voltage)/voltage);
+  Serial.printf("Voltage: %.2f V\nResitor: %.2f\n", voltage,resistor_ldr);
+
+  float lux =  constant * pow(resistor_ldr,droite_directeur); // Rough estimation
+  float lux_correct = lux *1000000; //???
+  Serial.printf("Estimated Lux: %.2f lumens\n", lux_correct);
+  Serial.println("==============================================");
+  delay(1000);
 }
 
 
@@ -353,5 +406,3 @@ void weatherstack_API()
     }
     delay(5000);
  }
-
-
