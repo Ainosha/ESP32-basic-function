@@ -4,8 +4,11 @@
 #define dottime             1000
 #define interval            2000
 #define calibrationOffset   10
+
+//LDR config constante
 #define constant            464.16
 #define droite_directeur    -1.333
+#define Resistance          10000//ohm
 
 int sensorMax=1023;  // minimum sensor value
 int sensorMin=50;  // maximum sensor value
@@ -208,20 +211,19 @@ void LM35(){
 }
 
 void LDR(){
-  int Resistance = 10000;//ohm
   adc1_config_width(ADC_WIDTH_BIT_12);
   adc1_config_channel_atten(ADC1_CHANNEL_0,ADC_ATTEN_DB_12);
   int value = adc1_get_raw(ADC1_CHANNEL_0);
     // Print the ADC raw value
   Serial.printf("Raw ADC Value: %d\n", value);
 
-  float voltage = (float)value * (3.9 / 4095.0);
-  float resistor_ldr = Resistance * ((3.3 - voltage)/voltage);
+  float voltage = (float)value * (3.9 / 4095);
+  float resistor_ldr = (float)Resistance * ((3.3 - voltage)/voltage);
   Serial.printf("Voltage: %.2f V\nResitor: %.2f\n", voltage,resistor_ldr);
 
   float lux =  constant * pow(resistor_ldr,droite_directeur); // Rough estimation
   float lux_correct = lux *1000000; //???
-  Serial.printf("Estimated Lux: %.10f lumens\n", lux_correct);
+  Serial.printf("Estimated Lux: %.2f lumens\n", lux_correct);
   Serial.println("==============================================");
   delay(1000);
 }
