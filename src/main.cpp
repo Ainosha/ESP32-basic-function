@@ -24,7 +24,7 @@ Adafruit_BME680 bme;
 #define calibrationOffset   10
 
 //LDR config constante
-#define constant            464.16
+#define constant            46441588.83
 #define droite_directeur    -1.333
 #define Resistance          10000//ohm
 
@@ -58,7 +58,7 @@ void MessageSOS(int ledPin);
 
 void Calibrationsensor(int sensorPin);
 void readsensor(int sensorPin);
-void LM35(int sensorPin);
+void LM35();
 void LDR();
 
 void init_BME();
@@ -81,18 +81,18 @@ void setup() {
 
   //pinMode(buttonPin, INPUT_PULLUP); // Set the button pin as input with pull-up resistor
   Serial.println("ESP32 with millis() for non-blocking delay");
-  //attachInterrupt(digitalPinToInterrupt(buttonPin), handleButtonPress, FALLING);
+  attachInterrupt(digitalPinToInterrupt(buttonPin), handleButtonPress, FALLING);
   //Calibrationsensor(sensorPin);
   //Calibrationsensor(sensorPinVN);
 
   //init_BME();
   //init_LCD();
-  init_WIFI();
+  //init_WIFI();
 
 }
 
 void loop() {
-  sendhello();
+  //sendhello();
   //MessageSOS(ledPin);
   //readsensor(sensorPin);
   //readsensor(sensorPinVN);
@@ -103,7 +103,7 @@ void loop() {
   //readbutton(buttonPin);
   //interruptshow();
   //LM35();
-  //LDR();
+  LDR();
 
 }
 
@@ -237,13 +237,13 @@ void readsensor(int sensorPin){
 void LM35(){
   //quantum NodeMCU ESP32 adc   :   q = 1.1V/4095 = 0.27 mV/bit
   //équation LM32               :   Vout = 10mV/°C * T
-  //1°C =>                          output = Vout/q = (10 mV/°C)/[(0.27 mV/bit)] * T = (2.7 bit/°C)* T
+  //1°C =>                          output = Vout/q = (10 mV/°C)/[(0.27 mV/bit)] * T = (37 bit/°C)* T => T = 0.027 *output
 
-  adc1_config_width(ADC_WIDTH_BIT_12);
-  adc1_config_channel_atten(ADC1_CHANNEL_5,ADC_ATTEN_DB_0);
-  int value = adc1_get_raw(ADC1_CHANNEL_5);
-  float Temp = (value * 0.027) + calibrationOffset;
-  Serial.printf("Température LM35 : %f °C\n", Temp);
+  adc1_config_width(ADC_WIDTH_BIT_12);// sur 12 bit
+  adc1_config_channel_atten(ADC1_CHANNEL_5,ADC_ATTEN_DB_0); // sur un tension 1.1V sur channel 5 pin VP
+  int value = adc1_get_raw(ADC1_CHANNEL_5); //prendre valeur
+  float Temp = (value *0.027) + calibrationOffset; //calcul + offset (0)
+  Serial.printf("Température LM35 : %f °C\n", Temp); //montrer résultat console
   delay(1000);
 
 }
@@ -260,8 +260,7 @@ void LDR(){
   Serial.printf("Voltage: %.2f V\nResitor: %.2f\n", voltage,resistor_ldr);
 
   float lux =  constant * pow(resistor_ldr,droite_directeur); // Rough estimation??
-  float lux_correct = lux *1000000; //???
-  Serial.printf("Estimated Lux: %.2f lumens\n", lux_correct);
+  Serial.printf("Estimated Lux: %.2f lumens\n", lux);
   Serial.println("==============================================");
   delay(1000);
 }
