@@ -4,6 +4,8 @@
 #define dottime             1000
 #define interval            2000
 #define calibrationOffset   10
+#define constant            464.16
+#define droite_directeur    -1.333
 
 int sensorMax=1023;  // minimum sensor value
 int sensorMin=50;  // maximum sensor value
@@ -34,6 +36,7 @@ void MessageSOS(int ledPin);
 void Calibrationsensor(int sensorPin);
 void readsensor(int sensorPin);
 void LM35(int sensorPin);
+void LDR();
 
 
 void setup() {
@@ -58,7 +61,9 @@ void loop() {
   //readsensor(sensorPinVN);
   //readbutton(buttonPin);
   //interruptshow();
-  LM35(sensorPinVN);
+  //LM35();
+  LDR();
+
 }
 
 void sendhello(){
@@ -188,11 +193,11 @@ void readsensor(int sensorPin){
   delay(1000);
 }
 
-void LM35(int sensorPin){
+void LM35(){
   //quantum NodeMCU ESP32 adc   :   q = 1.1V/4095 = 0.27 mV/bit
   //équation LM32               :   Vout = 10mV/°C * T
   //1°C =>                          output = Vout/q = (10 mV/°C)/[(0.27 mV/bit)] * T = (2.7 bit/°C)* T
-  
+
   adc1_config_width(ADC_WIDTH_BIT_12);
   adc1_config_channel_atten(ADC1_CHANNEL_5,ADC_ATTEN_DB_0);
   int value = adc1_get_raw(ADC1_CHANNEL_5);
@@ -200,4 +205,23 @@ void LM35(int sensorPin){
   Serial.printf("Température LM35 : %f °C\n", Temp);
   delay(1000);
 
+}
+
+void LDR(){
+  int Resistance = 10000;//ohm
+  adc1_config_width(ADC_WIDTH_BIT_12);
+  adc1_config_channel_atten(ADC1_CHANNEL_0,ADC_ATTEN_DB_12);
+  int value = adc1_get_raw(ADC1_CHANNEL_0);
+    // Print the ADC raw value
+  Serial.printf("Raw ADC Value: %d\n", value);
+
+  float voltage = (float)value * (3.9 / 4095.0);
+  float resistor_ldr = Resistance * ((3.3 - voltage)/voltage);
+  Serial.printf("Voltage: %.2f V\nResitor: %.2f\n", voltage,resistor_ldr);
+
+  float lux =  constant * pow(resistor_ldr,droite_directeur); // Rough estimation
+  float lux_correct = lux *1000000; //???
+  Serial.printf("Estimated Lux: %.10f lumens\n", lux_correct);
+  Serial.println("==============================================");
+  delay(1000);
 }
