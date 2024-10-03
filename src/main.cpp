@@ -58,14 +58,14 @@ void setup() {
 }
 
 void loop() {
-  //sendhello();
+  sendhello();
   //MessageSOS(ledPin);
   //readsensor(sensorPin);
   //readsensor(sensorPinVN);
   //readbutton(buttonPin);
   //interruptshow();
   //LM35();
-  LDR();
+  //LDR();
 
 }
 
@@ -109,11 +109,11 @@ void morse_s(int Pin){
   for(int i=0; i<3;i++){
     // Turn the LED on
     digitalWrite(Pin, HIGH);
-    delay(dottime);  // Wait for 1 second
+    delay(dottime);  
     
     // Turn the LED off
     digitalWrite(Pin, LOW);
-    delay(dottime);  // Wait for 1 second
+    delay(dottime); 
     Serial.print(".");
   }
   unsigned long dif = millis() - currentMillis;
@@ -125,11 +125,11 @@ void morse_o(int Pin){
   for(int i=0; i<3;i++){
     // Turn the LED on
     digitalWrite(Pin, HIGH);
-    delay(3*dottime);  // Wait for 1 second
+    delay(3*dottime);  
     
     // Turn the LED off
     digitalWrite(Pin, LOW);
-    delay(dottime);  // Wait for 1 second
+    delay(dottime); 
     Serial.print("-");
   }
   unsigned long dif = millis() - currentMillis;
@@ -141,7 +141,7 @@ void morse_espace_lettre(int ledPin){
   for(int i=0; i<3;i++){
     // Turn the LED off
     digitalWrite(ledPin, LOW);
-    delay(dottime);  // Wait for 1 second
+    delay(dottime);  
     Serial.print(".");
   }
   unsigned long dif = millis() - currentMillis;
@@ -153,7 +153,7 @@ void morse_espace_mots(int ledPin){
   for(int i=0; i<7;i++){    
     // Turn the LED off
     digitalWrite(ledPin, LOW);
-    delay(dottime);  // Wait for 1 second
+    delay(dottime);  
     Serial.print(".");
   }
   unsigned long dif = millis() - currentMillis;
@@ -221,7 +221,7 @@ void LDR(){
   float resistor_ldr = (float)Resistance * ((3.3 - voltage)/voltage);
   Serial.printf("Voltage: %.2f V\nResitor: %.2f\n", voltage,resistor_ldr);
 
-  float lux =  constant * pow(resistor_ldr,droite_directeur); // Rough estimation
+  float lux =  constant * pow(resistor_ldr,droite_directeur); // Rough estimation??
   float lux_correct = lux *1000000; //???
   Serial.printf("Estimated Lux: %.2f lumens\n", lux_correct);
   Serial.println("==============================================");
