@@ -80,14 +80,13 @@ void setup() {
   pinMode(sensorPinVN, INPUT);  // Set the VN pin as an input
 
   //pinMode(buttonPin, INPUT_PULLUP); // Set the button pin as input with pull-up resistor
-  Serial.println("ESP32 with millis() for non-blocking delay");
   attachInterrupt(digitalPinToInterrupt(buttonPin), handleButtonPress, FALLING);
-  //Calibrationsensor(sensorPin);
-  //Calibrationsensor(sensorPinVN);
+  Calibrationsensor(sensorPin);
+  Calibrationsensor(sensorPinVN);
 
   //init_BME();
   //init_LCD();
-  //init_WIFI();
+  init_WIFI();
 
 }
 
