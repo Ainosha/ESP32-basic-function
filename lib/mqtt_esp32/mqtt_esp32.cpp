@@ -11,6 +11,7 @@ Adafruit_MQTT_Publish photocell = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/fe
 // Setup a feed called 'onoff' for subscribing to changes.
 Adafruit_MQTT_Subscribe onoffbutton = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/onoff");
 
+Adafruit_MQTT_Subscribe *subscription;
 void init_WIFI()
 {
   // Connect to WiFi access point.
@@ -40,9 +41,7 @@ uint32_t x=0;
 
 void process_mqtt() {
   MQTT_connect();
-
-  Adafruit_MQTT_Subscribe *subscription;
-  while ((subscription = mqtt.readSubscription(5000))) {
+  while ((subscription = mqtt.readSubscription(1000))) {
     if (subscription == &onoffbutton) {
       Serial.print(F("Got: "));
       Serial.println((char *)onoffbutton.lastread);

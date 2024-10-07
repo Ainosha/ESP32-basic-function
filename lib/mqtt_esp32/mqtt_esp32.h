@@ -8,14 +8,15 @@
 #include <Adafruit_MQTT.h>
 #include <Adafruit_MQTT_Client.h>
 
-#define WLAN_SSID       ""
-#define WLAN_PASS       ""
+#define WLAN_SSID       "OnePlus 8T"
+#define WLAN_PASS       "Jaibesoins4g"
+
 #define AIO_SERVER      "io.adafruit.com"
 #define AIO_SERVERPORT  1883                   // use 8883 for SSL
-#define IO_USERNAME     "Popy"
-#define IO_KEY          ""
+
 #define AIO_USERNAME    ""
 #define AIO_KEY         ""
+
 #define api_key         "YOUR_API_KEY"   // Replace with your Weatherstack API key
 #define city            "Paris"
 

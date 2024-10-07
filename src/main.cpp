@@ -46,18 +46,6 @@ void setup() {
 }
 
 void loop() {
-  //sendhello();
-  //MessageSOS(ledPin);
-  //readsensor(sensorPin);
-  //readsensor(sensorPinVN);
-
-  //read_BME();
-  //LCD_display_counter_s();
-  //weatherstack_API();
-  //readbutton(buttonPin);
-  //interruptshow();
-  //LM35();
-  //LDR();
 
   //weatherstack_API();
   process_mqtt();
@@ -154,6 +142,5 @@ void LCDxBME_display_temp() //a tester
   //lcd.scrollDisplayRight();
 }
 
-// 2.2
 
 
