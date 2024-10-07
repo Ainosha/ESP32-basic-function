@@ -20,7 +20,7 @@
 void init_WIFI();
 void weatherstack_API();
 
-void init_wifi_mqtt();
+void init_mqtt();
 void process_mqtt();
 
 #endif

@@ -6,11 +6,6 @@
 #include <Adafruit_BME680.h>
 #include <LiquidCrystal_I2C.h>
 
-
-// Wifi tel Thomas
-const char* ssid     = "OnePlus 8T"; 
-const char* password = "Jaibesoins4g";
-
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 #define SEALEVELPRESSURE_HPA (1013.25)
