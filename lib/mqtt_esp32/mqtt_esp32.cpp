@@ -92,7 +92,8 @@ void weatherstack_API()
   {
     HTTPClient http;
     Serial.print("[HTTP] begin...\n");
-    http.begin("http://api.weatherstack.com/current?access_key=XXXXXXXXXXXXXXXX&query=Paris"); //replace XXXX... by API key
+    String url = "http://api.weatherstack.com/current?access_key=" + String(api_key) + "&query=" + city;
+    http.begin(url); 
     Serial.print("[HTTP] GET...\n");
     // start connection and send HTTP header         
     int httpCode = http.GET();

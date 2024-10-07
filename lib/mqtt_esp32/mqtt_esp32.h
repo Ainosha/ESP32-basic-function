@@ -16,6 +16,9 @@
 #define IO_KEY          ""
 #define AIO_USERNAME    ""
 #define AIO_KEY         ""
+#define api_key         "YOUR_API_KEY"   // Replace with your Weatherstack API key
+#define city            "Paris"
+
 
 void init_WIFI();
 void weatherstack_API();
