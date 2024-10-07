@@ -11,11 +11,8 @@ Adafruit_MQTT_Publish photocell = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/fe
 // Setup a feed called 'onoff' for subscribing to changes.
 Adafruit_MQTT_Subscribe onoffbutton = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/onoff");
 
-void init_mqtt() {
-  //Serial.begin(115200);
-  delay(10);
-  Serial.println(F("Adafruit MQTT demo"));
-
+void init_WIFI()
+{
   // Connect to WiFi access point.
   Serial.println(); Serial.println();
   Serial.print("Connecting to ");
@@ -29,12 +26,18 @@ void init_mqtt() {
   Serial.println();
   Serial.println("WiFi connected");
   Serial.print("IP address: "); Serial.println(WiFi.localIP());
+}
 
+void init_mqtt() {
+  delay(10);
+  Serial.println(F("Adafruit MQTT demo"));
+  init_WIFI();
   // Setup MQTT subscription for onoff feed.
   mqtt.subscribe(&onoffbutton);
 }
 
 uint32_t x=0;
+
 void process_mqtt() {
   MQTT_connect();
 
@@ -82,3 +85,35 @@ static void MQTT_connect() {
   }
   Serial.println("MQTT Connected!");
 }
+
+void weatherstack_API()
+{
+  if((WiFi.status() == WL_CONNECTED)) 
+  {
+    HTTPClient http;
+    Serial.print("[HTTP] begin...\n");
+    http.begin("http://api.weatherstack.com/current?access_key=XXXXXXXXXXXXXXXX&query=Paris"); //replace XXXX... by API key
+    Serial.print("[HTTP] GET...\n");
+    // start connection and send HTTP header         
+    int httpCode = http.GET();
+    // httpCode will be negative on error
+    if(httpCode == HTTP_CODE_OK) 
+    {
+      String payload = http.getString();
+      Serial.println(payload);
+      // Convert to JSON
+      DynamicJsonDocument doc(1024);
+      deserializeJson(doc, payload);
+      // Read and display values
+      String temp = doc["current"]["temperature"];
+      String desc = doc["current"]["weather_descriptions"][0];         
+      Serial.println("Temperature: "+temp+"*C, description: "+desc);
+      } 
+      else 
+      {
+        Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
+      }
+      http.end();
+    }
+    delay(5000);
+ }

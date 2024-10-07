@@ -1,17 +1,26 @@
-#ifndef MQTT_ESP32.H
-#define MQTT_ESP32.H
+#ifndef MQTT_ESP32_H
+#define MQTT_ESP32_H
+
+#include <WiFi.h>
+#include <HTTPClient.h>
+#include <ArduinoJson.h>
 
 #include <Adafruit_MQTT.h>
 #include <Adafruit_MQTT_Client.h>
 
 #define WLAN_SSID       ""
 #define WLAN_PASS       ""
-#define AIO_SERVER      ""
+#define AIO_SERVER      "io.adafruit.com"
 #define AIO_SERVERPORT  1883                   // use 8883 for SSL
-#define IO_USERNAME     ""
-//#define IO_KEY          ""
+#define IO_USERNAME     "Popy"
+#define IO_KEY          ""
+#define AIO_USERNAME    ""
+#define AIO_KEY         ""
 
+void init_WIFI();
+void weatherstack_API();
+
+void init_wifi_mqtt();
 void process_mqtt();
-void init_mqtt();
 
 #endif
