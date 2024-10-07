@@ -11,8 +11,8 @@
 #include <ArduinoJson.h>
 
 // Wifi tel Thomas
-const char* ssid     = "wifi_thomas_s"; 
-const char* password = "totolerigolo";
+const char* ssid     = ""; 
+const char* password = "";
 
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
